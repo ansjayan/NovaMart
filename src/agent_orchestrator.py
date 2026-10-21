@@ -1441,6 +1441,8 @@ def run_test_scenarios() -> None:
         prompt = f"[Session ID: {session_id}] [Customer ID: {customer_id}] {query}"
         max_attempts = 3
         for attempt in range(1, max_attempts + 1):
+            session_id = str(uuid.uuid4())[:8]
+            prompt = f"[Session ID: {session_id}] [Customer ID: {customer_id}] {query}"
             try:
                 with tracer.trace_request(session_id, customer_id, query):
                     response = orchestrator(prompt)
@@ -1449,7 +1451,7 @@ def run_test_scenarios() -> None:
                 break
             except Exception as e:
                 if attempt < max_attempts and any(err in str(e) for err in ("ServiceUnavailable", "Throttling", "Bedrock is unable")):
-                    print(f"  [Retry {attempt}/{max_attempts}] Transient Bedrock error ({e}). Retrying in 5s...")
+                    print(f"  [Retry {attempt}/{max_attempts}] Transient Bedrock error ({e}). Retrying in 5s with new session...")
                     time.sleep(5)
                 else:
                     raise
